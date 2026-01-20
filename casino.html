@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Casino</title>
+
+<style>
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, #1b5e20, #062b12 70%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,.03) 0,
+      rgba(255,255,255,.03) 2px,
+      transparent 2px,
+      transparent 6px
+    );
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  color: #f5f5f5;
+  text-align: center;
+}
+
+h1, h2 {
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px rgba(255,215,0,.6);
+}
+
+/* ---------- CHIP DISPLAY ---------- */
+#chipsDisplay {
+  font-size: 22px;
+  margin: 15px;
+  color: gold;
+  text-shadow: 0 0 10px rgba(255,215,0,.6);
+}
+
+/* ---------- BUTTONS ---------- */
+button {
+  padding: 12px 22px;
+  margin: 8px;
+  font-size: 16px;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(#ffd700, #b8860b);
+  color: #111;
+  font-weight: bold;
+  box-shadow:
+    0 4px 0 #8b7500,
+    0 0 15px rgba(255,215,0,.5);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 0 #8b7500,
+    0 0 25px rgba(255,215,0,.9);
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #8b7500;
+}
+
+/* ---------- PANELS ---------- */
+#casinoMenu,
+#minesGame,
+#blackjackGame {
+  background: rgba(0,0,0,.35);
+  border-radius: 20px;
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 25px;
+  box-shadow:
+    inset 0 0 40px rgba(0,0,0,.6),
+    0 0 30px rgba(0,0,0,.8);
+  animation: fadeIn .25s ease;
+}
+
+.hidden { display: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- MINES ---------- */
+#mineGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 64px);
+  gap: 10px;
+  justify-content: center;
+  margin: 20px auto;
+}
+
+.mine {
+  width: 64px;
+  height: 64px;
+  background: radial-gradient(circle at top, #1faa59, #0b5d2c);
+  border-radius: 12px;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: inset 0 0 10px rgba(0,0,0,.6);
+}
+
+.mine.safe {
+  animation: pop .25s ease;
+  box-shadow: 0 0 20px gold;
+}
+
+.mine.boom {
+  animation: shake .35s ease;
+  box-shadow: 0 0 25px crimson;
+}
+
+@keyframes pop {
+  0% { transform: scale(.5); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+/* ---------- CHIPS ---------- */
+.chips {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 10px 0;
+}
+
+.chip {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 4px dashed rgba(255,255,255,.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,.6),
+    0 4px 10px rgba(0,0,0,.7);
+  transition: transform .15s;
+}
+
+.chip:hover {
+  transform: scale(1.1);
+}
+
+.chip[data-v="10"]  { background: radial-gradient(#eee,#aaa); color:#111; }
+.chip[data-v="25"]  { background: radial-gradient(#2ecc71,#196f3d); }
+.chip[data-v="50"]  { background: radial-gradient(#e74c3c,#922b21); }
+.chip[data-v="100"] { background: radial-gradient(#3498db,#1f618d); }
+.chip[data-v="250"] { background: radial-gradient(#9b59b6,#5b2c6f); }
+
+/* ---------- BET ZONE ---------- */
+.bet-zone {
+  min-height: 80px;
+  border: 2px dashed gold;
+  border-radius: 14px;
+  margin: 15px auto;
+  max-width: 320px;
+  padding: 10px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,.6);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+}
+
+.stack .chip {
+  margin-top: -34px;
+  animation: stack .2s ease;
+}
+
+@keyframes stack {
+  from { transform: translateY(-10px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* ---------- TEXT ---------- */
+#minesMsg,
+#bjMsg {
+  margin-top: 10px;
+  font-size: 18px;
+  text-shadow: 0 0 10px rgba(255,215,0,.4);
+}
+</style>
+</head>
+
+<body>
+
+<div id="chipsDisplay">Chips: <span id="chips">1000</span></div>
+
+<!-- CASINO MENU -->
+<div id="casinoMenu">
+  <h1>🎰 Casino</h1>
+  <button onclick="openGame('mines')">💣 Mines</button>
+  <button onclick="openGame('blackjack')">🃏 Blackjack</button>
+</div>
+
+<!-- MINES -->
+<div id="minesGame" class="hidden">
+  <h2>💣 Mines</h2>
+  Bet: <input id="minesBet" type="number" value="50" min="1">
+  Mines: <input id="mineCount" type="number" value="3" min="1" max="24">
+  <br><br>
+  <button onclick="startMines()">Start</button>
+  <button onclick="cashOut()">Cash Out</button>
+
+  <div id="mineGrid"></div>
+  <div id="minesMsg"></div>
+
+  <button onclick="backToCasino()">⬅ Back</button>
+</div>
+
+<!-- BLACKJACK -->
+<div id="blackjackGame" class="hidden">
+  <h2>🃏 Blackjack</h2>
+
+  <div class="chips">
+    <div class="chip" data-v="10">10</div>
+    <div class="chip" data-v="25">25</div>
+    <div class="chip" data-v="50">50</div>
+    <div class="chip" data-v="100">100</div>
+    <div class="chip" data-v="250">250</div>
+  </div>
+
+  <div class="bet-zone">
+    <div class="stack" id="stack"></div>
+    <div id="betText">Click chips to bet</div>
+  </div>
+
+  <button onclick="undoBet()">Undo Bet</button>
+  <br><br>
+
+  <button onclick="deal()">Deal</button>
+  <button onclick="hit()">Hit</button>
+  <button onclick="stand()">Stand</button>
+  <button onclick="doubleDown()">Double</button>
+
+  <div id="bjMsg"></div>
+
+  <button onclick="backToCasino()">⬅ Back</button>
+</div>
+
+<script>
+/* ---------- SAVE ---------- */
+let chips = +localStorage.getItem("chips") || 1000;
+const chipsSpan = document.getElementById("chips");
+
+function updateChips() {
+  chipsSpan.textContent = chips;
+  localStorage.setItem("chips", chips);
+}
+updateChips();
+
+/* ---------- NAV ---------- */
+const casinoMenu = document.getElementById("casinoMenu");
+const minesGame = document.getElementById("minesGame");
+const blackjackGame = document.getElementById("blackjackGame");
+
+function openGame(g) {
+  casinoMenu.classList.add("hidden");
+  minesGame.classList.add("hidden");
+  blackjackGame.classList.add("hidden");
+  if (g === "mines") minesGame.classList.remove("hidden");
+  if (g === "blackjack") blackjackGame.classList.remove("hidden");
+}
+
+function backToCasino() {
+  minesGame.classList.add("hidden");
+  blackjackGame.classList.add("hidden");
+  casinoMenu.classList.remove("hidden");
+}
+
+/* ---------- MINES ---------- */
+const mineGrid = document.getElementById("mineGrid");
+const minesMsg = document.getElementById("minesMsg");
+const minesBetInput = document.getElementById("minesBet");
+const mineCountInput = document.getElementById("mineCount");
+
+let mineSpots=[], revealed=0, minesBet=0, mineTotal=0;
+
+function startMines(){
+  minesBet=+minesBetInput.value;
+  mineTotal=+mineCountInput.value;
+  if(minesBet<=0||minesBet>chips||mineTotal<1||mineTotal>24)return;
+
+  mineGrid.innerHTML="";
+  minesMsg.textContent="";
+  revealed=0;
+
+  mineSpots=Array(25).fill("safe");
+  let p=0;
+  while(p<mineTotal){
+    let i=Math.floor(Math.random()*25);
+    if(mineSpots[i]!=="boom"){mineSpots[i]="boom";p++}
+  }
+
+  mineSpots.forEach((_,i)=>{
+    const d=document.createElement("div");
+    d.className="mine";
+    d.onclick=()=>clickMine(d,i);
+    mineGrid.appendChild(d);
+  });
+}
+
+function clickMine(el,i){
+  if(el.textContent)return;
+  if(mineSpots[i]==="boom"){
+    el.classList.add("boom");
+    el.textContent="💥";
+    chips-=minesBet;
+    updateChips();
+    minesMsg.textContent="💣 You hit a mine!";
+    revealAll();
+  } else {
+    el.classList.add("safe");
+    el.textContent="💎";
+    revealed++;
+  }
+}
+
+function cashOut(){
+  if(!revealed)return;
+  let win=Math.floor(revealed*minesBet*(1+mineTotal/10));
+  chips+=win;
+  updateChips();
+  minesMsg.textContent="💰 Cashed out +"+win;
+  revealAll();
+}
+
+function revealAll(){
+  document.querySelectorAll(".mine").forEach((el,i)=>{
+    if(!el.textContent){
+      el.textContent=mineSpots[i]==="boom"?"💣":"💎";
+      el.classList.add(mineSpots[i]==="boom"?"boom":"safe");
+    }
+  });
+}
+
+/* ---------- BLACKJACK (SIMPLE) ---------- */
+let bet=0, betHistory=[], game=false, total=0;
+const stack=document.getElementById("stack");
+const betText=document.getElementById("betText");
+const bjMsg=document.getElementById("bjMsg");
+
+document.querySelectorAll(".chip").forEach(c=>{
+  c.onclick=()=>{
+    if(game)return;
+    let v=+c.dataset.v;
+    if(chips>=bet+v){
+      bet+=v;
+      betHistory.push(v);
+      stack.appendChild(c.cloneNode(true));
+      betText.textContent="Bet: "+bet;
+    }
+  }
+});
+
+function undoBet(){
+  if(game||!betHistory.length)return;
+  bet-=betHistory.pop();
+  stack.removeChild(stack.lastChild);
+  betText.textContent=bet?`Bet: ${bet}`:"Click chips to bet";
+}
+
+function deal(){
+  if(bet<=0||bet>chips)return;
+  game=true;
+  total=Math.floor(Math.random()*6)+16;
+  bjMsg.textContent="Your total: "+total;
+}
+
+function hit(){
+  if(!game)return;
+  total+=Math.floor(Math.random()*5)+1;
+  bjMsg.textContent="Your total: "+total;
+  if(total>21) end(false);
+}
+
+function stand(){
+  if(!game)return;
+  end(total>=18);
+}
+
+function doubleDown(){
+  if(!game||chips<bet)return;
+  chips-=bet;
+  bet*=2;
+  updateChips();
+  hit();
+}
+
+function end(win){
+  if(win){
+    chips+=bet*2;
+    bjMsg.textContent+=" — You win!";
+  } else {
+    chips-=bet;
+    bjMsg.textContent+=" — You lose!";
+  }
+  updateChips();
+  game=false;
+  bet=0;
+  betHistory=[];
+  stack.innerHTML="";
+  betText.textContent="Click chips to bet";
+}
+</script>
+</body>
+</html>
